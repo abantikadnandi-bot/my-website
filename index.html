@@ -1,0 +1,1251 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}</style></head><body><title>Hive and Web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: one emblem, half honeycomb and half web, then two instrument panels in the order the project presents them (honeycomb first, web second). */
+:root{
+  --bg:#F1F2F5; --stage:#E8EBF2; --surface:#FFFFFF; --surface-2:#E7E9F0;
+  --ink:#1A1822; --muted:#575468; --line:#D2D5DF;
+  --honey:#E8A317; --honey-ink:#7A4B00; --honey-wash:#FBEBC6; --on-honey:#1B1300;
+  --silk:#0F7C89; --thread:#56627A; --steel:#6B7690;
+  --ok:#1C7A4A; --warn:#9A5D00; --bad:#C23B2A;
+  --ball-hi:#8B88A3; --ball-lo:#2B2938;
+  --font-display:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14121B; --stage:#100F17; --surface:#1D1A27; --surface-2:#292539;
+    --ink:#EFEBF7; --muted:#A8A2BB; --line:#373249;
+    --honey:#F5B232; --honey-ink:#F5B232; --honey-wash:#3B2E10; --on-honey:#1B1300;
+    --silk:#6FD3D9; --thread:#C3CDE2; --steel:#8E9AB8;
+    --ok:#63D39B; --warn:#F2B04A; --bad:#FF7B66;
+    --ball-hi:#F1EEFA; --ball-lo:#8B84A6;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14121B; --stage:#100F17; --surface:#1D1A27; --surface-2:#292539;
+  --ink:#EFEBF7; --muted:#A8A2BB; --line:#373249;
+  --honey:#F5B232; --honey-ink:#F5B232; --honey-wash:#3B2E10; --on-honey:#1B1300;
+  --silk:#6FD3D9; --thread:#C3CDE2; --steel:#8E9AB8;
+  --ok:#63D39B; --warn:#F2B04A; --bad:#FF7B66;
+  --ball-hi:#F1EEFA; --ball-lo:#8B84A6;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;line-height:1.05;letter-spacing:-0.02em;margin:0;text-wrap:balance}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--silk);outline-offset:3px;border-radius:4px}
+.wrap{width:100%;max-width:1180px;margin-inline:auto;padding-inline:clamp(16px,4vw,36px)}
+.mono{font-family:var(--font-mono)}
+.eyebrow{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;flex-wrap:wrap;padding-block:6px}
+.brand{font-family:var(--font-display);font-weight:700;font-size:1.15rem;letter-spacing:-.01em;text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand-mark{width:22px;height:22px;display:block}
+.nav-links{display:flex;gap:6px 22px;flex-wrap:wrap;font-size:.92rem}
+.nav-links a{text-decoration:none;color:var(--muted);padding:4px 0}
+.nav-links a:hover{color:var(--ink)}
+
+/* hero */
+.hero{padding-block:clamp(36px,6vw,80px) clamp(40px,6vw,72px)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(24px,5vw,64px);align-items:center}
+.hero h1{font-size:clamp(2.7rem,6.4vw,5.4rem);margin-block:16px 22px}
+.hero h1 em{font-style:normal;color:var(--honey-ink)}
+.lede{font-size:clamp(1.05rem,1.6vw,1.22rem);max-width:56ch;color:var(--muted)}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+.btn{font:600 .95rem var(--font-body);display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-decoration:none;min-height:44px}
+.btn:hover{border-color:var(--muted)}
+.btn-honey{background:var(--honey);border-color:var(--honey);color:var(--on-honey)}
+.btn-honey:hover{border-color:var(--honey-ink);filter:brightness(1.04)}
+.btn-silk{background:var(--silk);border-color:var(--silk);color:var(--bg)}
+.btn-sm{padding:8px 14px;font-size:.86rem;min-height:38px}
+.emblem{width:100%;max-width:520px;aspect-ratio:1/1;justify-self:center}
+.emblem canvas{width:100%;height:100%;display:block}
+
+/* sections */
+.band{padding-block:clamp(56px,8vw,104px)}
+.band-tint{background:var(--surface);border-block:1px solid var(--line)}
+.sec-head{display:grid;gap:14px;max-width:760px;margin-bottom:clamp(28px,4vw,44px)}
+.sec-head h2{font-size:clamp(2rem,4.2vw,3.3rem)}
+.sec-head p{color:var(--muted);font-size:1.06rem}
+
+/* problem */
+.prob-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,5vw,64px);align-items:start}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.stat{padding:18px 18px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.band-tint .stat{background:var(--bg)}
+.stat b{display:block;font-family:var(--font-display);font-size:clamp(2.2rem,4vw,3rem);line-height:1;letter-spacing:-.03em}
+.stat span{display:block;margin-top:8px;font-size:.9rem;color:var(--muted);line-height:1.4}
+.fine{font-size:.78rem;color:var(--muted);margin-top:12px}
+.goals{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:10px}
+.goals li{display:grid;grid-template-columns:22px 1fr;gap:12px;align-items:start}
+.goals svg{width:22px;height:22px;margin-top:2px}
+
+/* lab */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:clamp(14px,2.4vw,26px)}
+.lab-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:clamp(18px,2.6vw,30px);align-items:start}
+.stage{min-width:0;display:grid;gap:14px}
+.stage canvas{width:100%;display:block;background:var(--stage);border-radius:10px;touch-action:manipulation}
+.panel{min-width:0;display:grid;gap:18px}
+.panel h3{font-size:1.05rem;letter-spacing:-.01em}
+.ctl{display:grid;gap:6px}
+.ctl-top{display:flex;justify-content:space-between;gap:12px;font-size:.9rem;align-items:baseline}
+.ctl-top output{font-family:var(--font-mono);font-size:.84rem;color:var(--ink);white-space:nowrap}
+.ctl small{color:var(--muted);font-size:.78rem;line-height:1.4}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;margin:0;background:transparent;--thumb:var(--honey);--p:50%;cursor:pointer}
+#web input[type=range]{--thumb:var(--silk)}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(to right,var(--thumb) var(--p),var(--line) var(--p))}
+input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:var(--line)}
+input[type=range]::-moz-range-progress{height:5px;border-radius:3px;background:var(--thumb)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--thumb);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--muted);margin-top:-7.5px}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--thumb);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--muted)}
+.chk{display:flex;align-items:center;gap:10px;font-size:.92rem;min-height:32px}
+.chk input{width:18px;height:18px;accent-color:var(--silk)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.verdict{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:6px;background:var(--bg)}
+.chip{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.chip i{width:9px;height:9px;border-radius:50%;background:currentColor;display:block}
+.verdict[data-tone=ok] .chip{color:var(--ok)}
+.verdict[data-tone=warn] .chip{color:var(--warn)}
+.verdict[data-tone=bad] .chip{color:var(--bad)}
+.verdict[data-tone=neutral] .chip{color:var(--muted)}
+.verdict p{font-size:.9rem;color:var(--muted);line-height:1.5}
+.tbl-wrap{overflow-x:auto}
+table.cmp{width:100%;border-collapse:collapse;font-size:.9rem}
+.cmp th,.cmp td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.cmp th:first-child,.cmp td:first-child{text-align:left;white-space:normal;color:var(--muted)}
+.cmp thead th{font-family:var(--font-mono);font-weight:500;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cmp td{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.cmp td.bad{color:var(--bad)} .cmp td.ok{color:var(--ok)}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.metric{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.metric span{display:block;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.metric b{display:block;font-family:var(--font-mono);font-weight:500;font-size:1.15rem;margin-top:2px;font-variant-numeric:tabular-nums}
+.note{font-size:.8rem;color:var(--muted);line-height:1.5}
+.status{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);min-height:1.4em}
+#hc-chart{height:210px}
+
+.legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--font-mono);font-size:.72rem;color:var(--muted);letter-spacing:.04em}
+.ramp{display:block;width:120px;height:8px;border-radius:4px;border:1px solid var(--line);background:linear-gradient(to right,var(--honey),var(--bad) 60%,color-mix(in srgb,var(--bad) 55%,var(--ink)))}
+.cmp tr.best td{color:var(--ink)} .cmp tr.best td:first-child{font-weight:600}
+/* principles */
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,4vw,56px)}
+.col h3{font-size:1.6rem;margin-bottom:6px;display:flex;align-items:center;gap:12px}
+.col h3 svg{width:28px;height:28px;flex:none}
+.col .tag{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.rules{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:0;border-top:1px solid var(--line)}
+.rules li{padding:16px 0;border-bottom:1px solid var(--line)}
+.rules b{display:block;font-weight:600;margin-bottom:2px}
+.rules span{color:var(--muted);font-size:.95rem}
+.world{margin-top:clamp(36px,5vw,60px);display:flex;flex-wrap:wrap;gap:10px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:.88rem;background:var(--surface)}
+.band-tint .pill{background:var(--bg)}
+.world-note{margin-top:14px;color:var(--muted);max-width:70ch;font-size:.95rem}
+
+/* limits */
+ul.plain{margin:14px 0 0;padding-left:1.15em;display:grid;gap:8px;color:var(--muted)}
+ul.plain b{color:var(--ink);font-weight:600}
+footer{padding-block:36px 56px;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem}
+
+
+/* presentation deck */
+.deck-shell{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--stage)}
+.deck-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface)}
+.deck-label{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:.76rem;letter-spacing:.06em;text-transform:uppercase}
+.deck-label svg{width:20px;height:20px;color:var(--honey);flex:none}
+.deck-actions{display:flex;gap:8px;flex-wrap:wrap}
+.deck-frame{display:block;width:100%;height:clamp(440px,68vw,820px);border:0;background:#101010}
+.deck-note{padding:10px 16px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
+@media(max-width:600px){.deck-frame{height:65vh;min-height:380px}.deck-top{padding:12px}}
+
+@media (max-width:960px){
+  .lab-body{grid-template-columns:minmax(0,1fr)}
+  .hero-grid,.prob-grid,.two{grid-template-columns:minmax(0,1fr)}
+  .emblem{max-width:420px}
+}
+@media (max-width:640px){
+  .nav{position:static}
+}
+@media (max-width:520px){
+  .stats{grid-template-columns:minmax(0,1fr)}
+  .nav-links{gap:2px 16px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Presentation viewer layout fix */
+#slides .deck-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+#slides .deck-frame {
+  display: block;
+  width: 100%;
+  height: 75vh;
+  min-height: 600px;
+  border: 0;
+  background: #fff;
+}
+
+@media (max-width: 768px) {
+  #slides .deck-frame {
+    height: 65vh;
+    min-height: 450px;
+  }
+}
+
+</style>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z" fill="none" stroke="var(--honey)" stroke-width="2"/><path d="M12 12v10M12 12l9-5M12 12 3 7M12 12l5 6M12 12l-5 6" stroke="var(--silk)" stroke-width="1.4" fill="none"/></svg>
+      Hive and Web
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#problem">Problem</a>
+      <a href="#honeycomb">Honeycomb test</a>
+      <a href="#web">Web test</a>
+      <a href="#why">Why it works</a>
+      <a href="#limits">Limits</a>
+      <a href="#slides">Presentation</a>
+      <a href="#slides">Slides</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">EOB project · Bio-inspired structures</div>
+        <h1>Nature solved this <em>already.</em></h1>
+        <p class="lede">Honey bees and spiders work with limited wax and protein and still carry real loads. Two simulations below recreate that trade-off between strength, weight and material, so you can over-build, under-build and find the point in between.</p>
+        <div class="cta-row">
+          <a class="btn btn-honey" href="#honeycomb">Run the honeycomb test</a>
+          <a class="btn" href="#web">Catch a ball in a web</a>
+        </div>
+      </div>
+      <div class="emblem" aria-hidden="true"><canvas id="hero-cv"></canvas></div>
+    </div>
+  </section>
+
+  <section class="band band-tint" id="problem">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">The engineering challenge</div>
+        <h2>Build too much and you waste it. Build too little and it fails.</h2>
+        <p>Modern construction and manufacturing struggle to balance strength, weight and material cost. Over-built structures waste material, add cost and increase the carbon footprint. Under-built ones fail under load, wind or impact.</p>
+      </div>
+      <div class="prob-grid">
+        <div>
+          <div class="stats">
+            <div class="stat"><b>34%</b><span>of global CO₂ emissions come from buildings and construction</span></div>
+            <div class="stat"><b>32%</b><span>of global energy consumption goes to the buildings sector</span></div>
+            <div class="stat"><b>18%</b><span>of global emissions come from cement and steel production alone</span></div>
+            <div class="stat"><b>⅓</b><span>of global waste is generated by buildings and construction</span></div>
+          </div>
+          <p class="fine">Figures as cited in the EOB project research.</p>
+        </div>
+        <div>
+          <h3 style="font-size:1.4rem">Can we design structures that are:</h3>
+          <ul class="goals">
+            <li><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="none" stroke="var(--honey)" stroke-width="1.6"/><path d="m6.5 11.5 3 3 6-7" fill="none" stroke="var(--honey)" stroke-width="1.8"/></svg><span>Light, yet able to bear heavy or dynamic loads</span></li>
+            <li><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="none" stroke="var(--honey)" stroke-width="1.6"/><path d="m6.5 11.5 3 3 6-7" fill="none" stroke="var(--honey)" stroke-width="1.8"/></svg><span>Material and cost efficient, minimising weight</span></li>
+            <li><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="none" stroke="var(--honey)" stroke-width="1.6"/><path d="m6.5 11.5 3 3 6-7" fill="none" stroke="var(--honey)" stroke-width="1.8"/></svg><span>Resilient to impact, vibration, wind and seismic force</span></li>
+            <li><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="none" stroke="var(--honey)" stroke-width="1.6"/><path d="m6.5 11.5 3 3 6-7" fill="none" stroke="var(--honey)" stroke-width="1.8"/></svg><span>Scalable, from a packaging box to a stadium roof</span></li>
+            <li><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="none" stroke="var(--honey)" stroke-width="1.6"/><path d="m6.5 11.5 3 3 6-7" fill="none" stroke="var(--honey)" stroke-width="1.8"/></svg><span>Sustainable, using less energy and raw material to build</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PART ONE: HONEYCOMB -->
+  <section class="band" id="honeycomb">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Part one · Honeycomb</div>
+        <h2>Honeycomb crush test</h2>
+        <p>Drop a weight onto the same mass of aluminium, built two ways. The solid slab is a few millimetres thick and stops the weight almost instantly. The honeycomb is deep, and its walls fold one row at a time, holding the force steady while the weight slows down.</p>
+      </div>
+      <div class="lab">
+        <div class="lab-body">
+          <div class="stage">
+            <canvas id="hc-cv" role="img" aria-label="Side view of a weight dropped onto a solid aluminium slab and onto a honeycomb core of the same mass"></canvas>
+            <div class="btns">
+              <button class="btn btn-honey btn-sm" id="b-drop" type="button">Drop again</button>
+              <button class="btn btn-sm" id="b-auto" type="button">Find lightest safe core</button>
+              <label class="chk" for="chk-heat"><input type="checkbox" id="chk-heat" checked> Stress colours</label>
+            </div>
+            <canvas id="hc-chart" role="img" aria-label="Chart of deceleration in g against time for the honeycomb and the solid slab, log scale"></canvas>
+            <div class="legend"><span>Low stress</span><i class="ramp"></i><span>High stress, hinges forming</span></div>
+            <p class="note">Colours show where the walls work hardest: the row that is folding glows red, and the corner hinges take the most. Slow motion: the honeycomb crush lasts about 20 to 40 ms in real time. Cell walls are drawn thicker than scale so they stay visible.</p>
+          </div>
+          <div class="panel">
+            <div class="ctl">
+              <label class="ctl-top" for="in-tl"><span>Wall thickness</span><output id="o-tl">4.0 % of cell size</output></label>
+              <input type="range" id="in-tl" min="1" max="15" step="0.5" value="4">
+              <small>Thicker walls make a heavier, stiffer core.</small>
+            </div>
+            <div class="ctl">
+              <label class="ctl-top" for="in-h"><span>Drop height</span><output id="o-h">2.0 m</output></label>
+              <input type="range" id="in-h" min="0.5" max="6" step="0.5" value="2">
+            </div>
+            <div class="ctl">
+              <label class="ctl-top" for="in-m"><span>Payload mass</span><output id="o-m">400 kg</output></label>
+              <input type="range" id="in-m" min="100" max="1000" step="50" value="400">
+              <small>Payload tolerates 50 g. Panel 0.5 m × 0.5 m, 150 mm deep, aluminium.</small>
+            </div>
+            <div class="verdict" id="hc-verdict" data-tone="ok" aria-live="polite">
+              <span class="chip"><i></i><span id="hc-chip">Efficient</span></span>
+              <p id="hc-why"></p>
+            </div>
+            <div class="tbl-wrap">
+              <table class="cmp">
+                <thead><tr><th></th><th>Solid slab</th><th>Honeycomb</th></tr></thead>
+                <tbody>
+                  <tr><td>Peak deceleration</td><td id="t-gs">-</td><td id="t-gh">-</td></tr>
+                  <tr><td>Crush stroke</td><td id="t-ss">-</td><td id="t-sh">-</td></tr>
+                  <tr><td>Aluminium used</td><td id="t-ms">-</td><td id="t-mh">-</td></tr>
+                  <tr><td>Payload (50 g limit)</td><td id="t-ps">-</td><td id="t-ph">-</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHAPE COMPARISON -->
+  <section class="band" id="shapes" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Part one · Shape comparison</div>
+        <h2>Why hexagons?</h2>
+        <p>Any cell shape can fill a panel, but not with the same amount of wall. For the same cell size and wall thickness, see how much aluminium each shape needs. Turn on load paths to see how each lattice carries a squeeze.</p>
+      </div>
+      <div class="lab"><div class="lab-body">
+        <div class="stage">
+          <canvas id="sh-cv" role="img" aria-label="Triangle, square, hexagon and circle cell patterns of equal cell size, compared by wall length"></canvas>
+          <div class="btns"><label class="chk" for="chk-load"><input type="checkbox" id="chk-load"> Show load paths</label></div>
+          <div class="legend"><span>Little load</span><i class="ramp"></i><span>Hinge or contact point</span></div>
+          <p class="note">Load paths are a schematic of a vertical squeeze: squares load only their vertical walls, triangles load every wall, hexagons bend at the corner hinges, and circles press at point contacts. Red patches are wasted space between round tubes.</p>
+        </div>
+        <div class="panel">
+          <h3>Same cell size, same wall thickness</h3>
+          <div class="tbl-wrap"><table class="cmp"><thead><tr><th></th><th>Wall</th><th>Aluminium</th><th>Extra</th></tr></thead><tbody id="sh-body"></tbody></table></div>
+          <div class="verdict" data-tone="ok"><span class="chip"><i></i><span>Hexagon wins</span></span><p id="sh-why"></p></div>
+          <p class="note">Hexagons divide a flat surface into equal cells with the least wall (the honeycomb conjecture, proved by Thomas Hales in 1999). Aluminium uses the wall thickness set in the crush test above.</p>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- PART TWO: SPIDER WEB -->
+  <section class="band band-tint" id="web">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Part two · Spider web</div>
+        <h2>Spider-web catch test</h2>
+        <p>Radial threads carry the load and spiral threads tie them together. Drop a ball, click any thread to cut it, switch the spirals off, or thin the web, and watch the rest of the threads take over until the web gives way.</p>
+      </div>
+      <div class="lab">
+        <div class="lab-body">
+          <div class="stage">
+            <canvas id="w-cv" role="img" aria-label="Three-quarter view of a ball dropping into a spider web, threads coloured by tension. Click a thread to cut it."></canvas>
+            <div class="btns">
+              <button class="btn btn-silk btn-sm" id="b-wdrop" type="button">Drop ball</button>
+              <button class="btn btn-sm" id="b-wreset" type="button">Mend web</button>
+              <button class="btn btn-sm" id="b-wauto" type="button">Find lightest web</button>
+            </div>
+            <div class="status" id="w-status" aria-live="polite">Click any thread to cut it.</div>
+            <div class="verdict" id="w-verdict" data-tone="ok" aria-live="polite">
+              <span class="chip"><i></i><span id="w-chip">Efficient</span></span>
+              <p id="w-why"></p>
+            </div>
+            <div class="metrics">
+              <div class="metric"><span>Deepest sag</span><b id="m-sag">-</b></div>
+              <div class="metric"><span>Peak strain</span><b id="m-peak">-</b></div>
+              <div class="metric"><span>Threads lost</span><b id="m-broken">-</b></div>
+              <div class="metric"><span>Silk used</span><b id="m-silk">-</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ctl">
+              <label class="ctl-top" for="in-nr"><span>Radial threads</span><output id="o-nr">16</output></label>
+              <input type="range" id="in-nr" min="6" max="24" step="1" value="16">
+            </div>
+            <div class="ctl">
+              <label class="ctl-top" for="in-ns"><span>Spiral rings</span><output id="o-ns">8</output></label>
+              <input type="range" id="in-ns" min="3" max="12" step="1" value="8">
+            </div>
+            <label class="chk" for="chk-spiral"><input type="checkbox" id="chk-spiral" checked> Spiral threads on</label>
+            <div class="ctl">
+              <label class="ctl-top" for="in-pre"><span>Pre-tension</span><output id="o-pre">2 %</output></label>
+              <input type="range" id="in-pre" min="0" max="6" step="0.5" value="2">
+              <small>How tightly the web is strung before the ball arrives.</small>
+            </div>
+            <div class="ctl">
+              <label class="ctl-top" for="in-bm"><span>Ball weight</span><output id="o-bm">2</output></label>
+              <input type="range" id="in-bm" min="0.5" max="8" step="0.5" value="2">
+            </div>
+            <div class="ctl">
+              <label class="ctl-top" for="in-bh"><span>Drop height</span><output id="o-bh">1.0 R</output></label>
+              <input type="range" id="in-bh" min="0.5" max="1.5" step="0.1" value="1">
+              <small>R is the radius of the web.</small>
+            </div>
+            <div class="ctl">
+              <label class="ctl-top" for="in-bo"><span>Landing spot</span><output id="o-bo">centre</output></label>
+              <input type="range" id="in-bo" min="0" max="70" step="5" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="band band-tint" id="slides">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">05 / Presentation deck</div>
+        <h2>Explore the complete story.</h2>
+        <p>View the full presentation on honeycomb and spider-web inspired structures, then download a copy to keep.</p>
+      </div>
+      <div class="deck-shell">
+        <div class="deck-top">
+          <div class="deck-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1"/><path d="M8 21h8M12 17v4M7 8h10M7 11h7"/></svg><span>Hive and Web · Project presentation</span></div>
+          <div class="deck-actions">
+            <a class="btn btn-sm" href="./honeycomb-presentation.pptx" download>Download PPTX</a>
+            <a class="btn btn-honey btn-sm" href="./honeycomb-presentation.pdf" download>Download PDF</a>
+          </div>
+        </div>
+        <iframe class="deck-frame" src="./honeycomb-presentation.pdf#view=FitH" title="Hive and Web PowerPoint presentation, displayed as PDF" loading="lazy"></iframe>
+        <div class="deck-note">Use the PDF viewer controls to move between slides or zoom in. If the preview does not load in your browser, use Download PDF.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Why the geometry works</div>
+        <h2>Many small members beat a few big ones.</h2>
+        <p>Traditional frames rely on a few strong beams. Both structures here split the job across many connected members, which improves resilience while lowering mass.</p>
+      </div>
+      <div class="two">
+        <div class="col">
+          <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z" fill="none" stroke="var(--honey)" stroke-width="2"/></svg>Honeycomb</h3>
+          <div class="tag">Compression and energy absorption</div>
+          <ul class="rules">
+            <li><b>Short, shared walls</b><span>Adjacent cells share walls and brace each other, forming a multi-path truss. Each hexagon shares the strain, so a local failure does not spread.</span></li>
+            <li><b>Progressive collapse</b><span>Cells deform row by row and absorb mechanical energy instead of failing all at once. This is what the crush test shows.</span></li>
+            <li><b>Low density, useful stiffness</b><span>Cellular geometry needs less material for a component with useful mechanical performance, and designs can be graded, hierarchical or reinforced.</span></li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="var(--silk)" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></g></svg>Spider web</h3>
+          <div class="tag">Tension and redundancy</div>
+          <ul class="rules">
+            <li><b>Tension carries the load</b><span>Radial threads take the main load and spiral threads spread forces across the web, much like a cable net or a suspension bridge.</span></li>
+            <li><b>Redundancy and damage tolerance</b><span>When one strand breaks, the rest redistribute the load. Cut threads in the test to see it. The same idea is used in earthquake-resistant design.</span></li>
+            <li><b>Form follows load</b><span>Thread arrangement changes strength. Engineers use form-finding and optimisation algorithms to reach efficient shapes the way spiders reach them by instinct.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="world">
+        <span class="pill">Building facades</span><span class="pill">Aerospace panels</span><span class="pill">Tensile roofs</span><span class="pill">Impact-resistant materials</span><span class="pill">Structural monitoring</span><span class="pill">Architecture</span><span class="pill">Mechanical engineering</span>
+      </div>
+      <p class="world-note">The roof of the 1972 Munich Olympic Stadium is a cable net designed by Frei Otto. It shows how web-like tension can be scaled up to a stadium.</p>
+    </div>
+  </section>
+
+  <section class="band band-tint" id="limits">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">Limits</div>
+        <h2>Where the idea gets hard.</h2>
+      </div>
+      <div class="two">
+        <div class="col">
+          <h3 style="font-size:1.3rem">Real constraints</h3>
+          <ul class="plain">
+            <li><b>Manufacturing complexity.</b> Hierarchical cell geometries and web-like lattices often need advanced manufacturing such as 3D printing.</li>
+            <li><b>Direction-dependent behaviour.</b> Honeycomb performance changes with the direction and type of loading.</li>
+            <li><b>Local damage.</b> Damage to individual cells changes the response of the whole structure.</li>
+            <li><b>Scaling.</b> A design that works in the lab cannot be assumed to work the same way in a full-sized building. Much of the web research covers materials, lattices and components, not complete buildings.</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3 style="font-size:1.3rem">What these simulations leave out</h3>
+          <ul class="plain">
+            <li><b>Honeycomb test.</b> A one-dimensional crush model using scaling laws for in-plane collapse (plateau stress proportional to the square of wall thickness over cell size, densification near 1 − 1.4 × relative density). Aluminium values are typical, not measured. Magnitudes are illustrative.</li>
+            <li><b>Web test.</b> A tension-only mass and spring model with silk-like stretch and a break strain of 28%. Weight is in relative units. Anchors are rigid and air drag is ignored.</li>
+            <li><b>Shape comparison.</b> Counts wall length for equal-area cells in the thin-wall limit. Load-path colours are a schematic, not a simulation.</li>
+            <li><b>Both.</b> Good for seeing how the trade-off behaves. Not a substitute for finite element analysis or testing.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Hive and Web · Interactive companion to the EOB project on honeycomb structures and spider-web inspired structures.</div>
+</footer>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const lerp = (a,b,t) => a + (b-a)*t;
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- theme tokens for canvas ---------- */
+let TK = {};
+function readTokens(){
+  const cs = getComputedStyle(document.documentElement);
+  const g = n => cs.getPropertyValue(n).trim();
+  TK = {bg:g('--bg'), stage:g('--stage'), surface:g('--surface'), s2:g('--surface-2'), ink:g('--ink'), muted:g('--muted'), line:g('--line'),
+        honey:g('--honey'), wash:g('--honey-wash'), silk:g('--silk'), thread:g('--thread'), steel:g('--steel'),
+        ok:g('--ok'), warn:g('--warn'), bad:g('--bad'), bh:g('--ball-hi'), bl:g('--ball-lo')};
+}
+function rgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function mix(a,b,t){ const A=rgb(a),B=rgb(b); return `rgb(${Math.round(lerp(A[0],B[0],t))},${Math.round(lerp(A[1],B[1],t))},${Math.round(lerp(A[2],B[2],t))})`; }
+function fit(c, h){
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(100, c.clientWidth);
+  c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); c.style.height = h+'px';
+  const ctx = c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx, w, h};
+}
+const MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
+const SANS = '"IBM Plex Sans", system-ui, sans-serif';
+
+/* =====================================================
+   HERO EMBLEM
+   ===================================================== */
+const heroCv = $('#hero-cv');
+function drawHero(t){
+  const W = heroCv.clientWidth; if(!W) return;
+  const {ctx} = fit(heroCv, W);
+  const H = W, cx = W/2, cy = H/2 - W*0.02, R = W*0.40;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = TK.line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx,cy,R+12,0,Math.PI*2); ctx.stroke();
+  // left: honeycomb
+  ctx.save(); ctx.beginPath(); ctx.rect(0,0,cx,H); ctx.clip();
+  const l = R/6.2, dx = Math.sqrt(3)*l, dy = 1.5*l;
+  for(let row=-9; row<=9; row++){
+    for(let col=-9; col<=9; col++){
+      const x = cx + col*dx + (row&1 ? dx/2 : 0), y = cy + row*dy;
+      const d = Math.hypot(x-cx, y-cy);
+      if(d > R - l*0.3) continue;
+      const wave = Math.sin(t*1.3 - d/R*5.5);
+      const sc = 0.9 + 0.06*wave;
+      ctx.beginPath();
+      for(let k=0;k<6;k++){ const a = Math.PI/180*(60*k-30); const px = x + Math.cos(a)*l*sc, py = y + Math.sin(a)*l*sc; k?ctx.lineTo(px,py):ctx.moveTo(px,py); }
+      ctx.closePath();
+      ctx.globalAlpha = 0.35 + 0.25*(wave*0.5+0.5); ctx.fillStyle = TK.wash; ctx.fill();
+      ctx.globalAlpha = 1; ctx.strokeStyle = TK.honey; ctx.lineWidth = 2.2; ctx.stroke();
+    }
+  }
+  ctx.restore();
+  // right: web
+  ctx.save(); ctx.beginPath(); ctx.rect(cx,0,W-cx,H); ctx.clip();
+  const nR = 9, rings = 8;
+  ctx.strokeStyle = TK.silk; ctx.lineWidth = 1.5;
+  for(let j=0;j<nR;j++){
+    const a = -Math.PI/2 + j*Math.PI/(nR-1);
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R, cy+Math.sin(a)*R); ctx.stroke();
+  }
+  ctx.lineWidth = 1.1;
+  for(let i=1;i<=rings;i++){
+    const r = R*i/rings*(1 + 0.012*Math.sin(t*2 - i*0.7));
+    ctx.beginPath();
+    for(let j=0;j<nR-1;j++){
+      const a0 = -Math.PI/2 + j*Math.PI/(nR-1), a1 = a0 + Math.PI/(nR-1), am = (a0+a1)/2;
+      const p0 = [cx+Math.cos(a0)*r, cy+Math.sin(a0)*r], p1 = [cx+Math.cos(a1)*r, cy+Math.sin(a1)*r];
+      const k = r*0.965/Math.cos(Math.PI/(nR-1)/2)*0.0 + r*0.972;
+      const cp = [cx+Math.cos(am)*k, cy+Math.sin(am)*k];
+      if(j===0) ctx.moveTo(p0[0],p0[1]);
+      ctx.quadraticCurveTo(cp[0],cp[1],p1[0],p1[1]);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.strokeStyle = TK.muted; ctx.globalAlpha = .5; ctx.setLineDash([3,5]);
+  ctx.beginPath(); ctx.moveTo(cx,cy-R-12); ctx.lineTo(cx,cy+R+12); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  ctx.font = `500 ${Math.max(10,W*0.022)}px ${MONO}`; ctx.fillStyle = TK.muted; ctx.textAlign = 'center';
+  ctx.fillText('HIVE', cx - R*0.5, cy + R + 32); ctx.fillText('WEB', cx + R*0.5, cy + R + 32);
+}
+let heroT = 0, heroRAF = 0;
+function heroLoop(ts){ heroT = ts/1000; drawHero(heroT); heroRAF = requestAnimationFrame(heroLoop); }
+
+/* =====================================================
+   PART ONE: HONEYCOMB CRUSH
+   ===================================================== */
+const HC = {Es:70e9, sy:200e6, rho:2700, A:0.25, H:0.15, G:9.81, glim:50, rows:7};
+
+function hcModel(tl){
+  const rs = 2/Math.sqrt(3)*tl;                 // relative density of a regular hexagonal honeycomb
+  const epsD = 1 - 1.4*rs;                      // densification strain
+  const Fpl = HC.sy*tl*tl*HC.A;                 // plastic collapse plateau (in-plane, ~ (t/l)^2)
+  const k = 2.3*Math.pow(tl,3)*HC.Es*HC.A/HC.H; // elastic stiffness ~ (t/l)^3
+  const sD = epsD*HC.H;
+  return {type:'hc', tl, rs, epsD, sD, k, Fpl, kd:HC.Es*HC.A/(0.25*HC.H), Fcap:HC.sy*HC.A,
+          mass:HC.rho*rs*HC.A*HC.H,
+          yield(sp){
+            const e = sp/HC.H;
+            if(sp >= sD) return Fpl;
+            return Fpl*(1 + 0.25*Math.exp(-e/0.03) + 0.05*Math.sin(2*Math.PI*e*HC.rows/epsD));
+          }};
+}
+function solidModel(tl){
+  const rs = 2/Math.sqrt(3)*tl, h = rs*HC.H;
+  return {type:'solid', tl, h, k:HC.Es*HC.A/h, Fcap:HC.sy*HC.A, mass:HC.rho*h*HC.A, yield(){ return HC.sy*HC.A; }, sD:h*0.95, kd:HC.Es*HC.A/(0.05*h)};
+}
+function crush(M, m, v0){
+  const W = m*HC.G;
+  let s=0, v=v0, sp=0, t=0, peak=0, smax=0, stride=1, n=0, hard=false;
+  let T=[0], S=[0], Gs=[0];
+  for(let steps=0; steps<4e6; steps++){
+    const Fe = M.k*(s-sp), Fy = M.yield(sp);
+    let F;
+    if(Fe > Fy){ sp = s - Fy/M.k; F = Fy; } else F = Math.max(Fe, 0);
+    const dens = s > M.sD;
+    if(dens) F += M.kd*(s-M.sD);
+    if(F > M.Fcap) F = M.Fcap;
+    const kt = M.k + (dens ? M.kd : 0);
+    const dt = Math.min(5e-5, 0.05*Math.sqrt(m/kt));
+    v += (HC.G - F/m)*dt; s += v*dt; t += dt;
+    const g = (F-W)/W; if(g>peak) peak=g; if(s>smax) smax=s;
+    if(n++ % stride === 0){
+      T.push(t); S.push(s); Gs.push(g);
+      if(T.length > 2400){ T = T.filter((_,i)=>i%2===0); S = S.filter((_,i)=>i%2===0); Gs = Gs.filter((_,i)=>i%2===0); stride*=2; }
+    }
+    if(M.type==='hc' && s >= HC.H*0.995){ hard = true; break; }
+    if(v <= 0 && steps > 2) break;
+  }
+  T.push(t); S.push(smax); Gs.push(0);
+  return {T, S, G:Gs, peak, smax, sFinal:Math.min(sp, smax), tEnd:t, E:0.5*m*v0*v0 + W*smax, hard};
+}
+function hcVerdict(M, r){
+  const u = r.smax / M.sD;
+  if(r.hard || u > 0.97) return {tone:'bad', chip:'Under-built', why:'The cells fold flat before the weight stops. The core bottoms out and the force spikes to the level of a solid block.'};
+  if(r.peak > HC.glim)  return {tone:'warn', chip:'Over-built', why:`The walls are stiffer than needed. Peak deceleration is ${fmtG(r.peak)} against a 50 g limit, and the extra aluminium makes it worse.`};
+  if(u > 0.88) return {tone:'warn', chip:'Thin margin', why:`Safe, but the core uses ${Math.round(u*100)}% of its stroke. A slightly higher drop would bottom it out.`};
+  if(u < 0.5)  return {tone:'warn', chip:'Over-built', why:`Safe, but only ${Math.round(u*100)}% of the stroke is used. A thinner wall would protect the payload with less material.`};
+  return {tone:'ok', chip:'Efficient', why:`The core uses ${Math.round(u*100)}% of its stroke and keeps the payload under 50 g with no spare material.`};
+}
+function fmtG(g){ g=Math.max(0,g); return (g>=1000 ? Math.round(g).toLocaleString('en-US') : g>=100 ? Math.round(g) : g.toFixed(1)) + ' g'; }
+function fmtMm(m){ const mm = m*1000; return (mm<1 ? mm.toFixed(2) : mm<10 ? mm.toFixed(1) : Math.round(mm)) + ' mm'; }
+
+const hc = {tl:0.04, h:2, m:400, res:null, playT:null, cv:$('#hc-cv'), ch:$('#hc-chart'), geom:null, raf:0};
+const T_FALL = 0.9, T_IMPACT = 2.2, T_REST = 0.5;
+
+function hcCompute(){
+  const Mh = hcModel(hc.tl), Ms = solidModel(hc.tl);
+  const v0 = Math.sqrt(2*HC.G*hc.h);
+  const rh = crush(Mh, hc.m, v0), rs = crush(Ms, hc.m, v0);
+  hc.res = {Mh, Ms, rh, rs, verdict: hcVerdict(Mh, rh), v0};
+  const slow = T_IMPACT / Math.max(rh.tEnd, 1e-4);
+  hc.res.slow = slow;
+  // table
+  const sPass = rs.peak <= HC.glim, hPass = rh.peak <= HC.glim && !rh.hard;
+  $('#t-gs').textContent = fmtG(rs.peak); $('#t-gh').textContent = fmtG(rh.peak);
+  $('#t-ss').textContent = fmtMm(rs.smax); $('#t-sh').textContent = fmtMm(rh.smax);
+  $('#t-ms').textContent = Ms.mass.toFixed(1)+' kg'; $('#t-mh').textContent = Mh.mass.toFixed(1)+' kg';
+  const ps=$('#t-ps'), ph=$('#t-ph');
+  ps.textContent = sPass ? 'Safe' : 'Damaged'; ph.textContent = hPass ? 'Safe' : 'Damaged';
+  ps.className = sPass ? 'ok' : 'bad'; ph.className = hPass ? 'ok' : 'bad';
+  $('#t-gs').className = sPass ? 'ok' : 'bad'; $('#t-gh').className = hPass ? 'ok' : 'bad';
+  const v = $('#hc-verdict'); v.dataset.tone = hc.res.verdict.tone;
+  $('#hc-chip').textContent = hc.res.verdict.chip; $('#hc-why').textContent = hc.res.verdict.why;
+  $('#o-tl').textContent = (hc.tl*100).toFixed(1)+' % of cell size';
+  $('#o-h').textContent = hc.h.toFixed(1)+' m'; $('#o-m').textContent = hc.m+' kg';
+  shUpdate();
+}
+function sample(R, t){ // interpolate S and G at sim time t
+  const T=R.T; if(t<=0) return {s:0,g:0};
+  if(t>=T[T.length-1]) return {s:R.sFinal, g:0, done:true};
+  let lo=0, hi=T.length-1; while(hi-lo>1){ const mid=(lo+hi)>>1; (T[mid]<=t)?lo=mid:hi=mid; }
+  const f = (t-T[lo])/Math.max(T[hi]-T[lo],1e-12);
+  return {s:lerp(R.S[lo],R.S[hi],f), g:lerp(R.G[lo],R.G[hi],f)};
+}
+function hcLayout(){
+  const W = hc.cv.clientWidth;
+  const panelW = clamp(W*0.40, 120, 210);
+  const l = panelW/(6*Math.sqrt(3));
+  const hPx = (1.5*HC.rows + 0.5)*l;
+  const H = Math.round(hPx + 204);
+  hc.geom = {W, H, panelW, l, hPx, floorY: H-54, drop: 60, pay: 44, pxPerM: hPx/HC.H, cxS: W*0.25, cxH: W*0.75};
+  return hc.geom;
+}
+function drawHC(){
+  const g0 = hcLayout();
+  const {ctx} = fit(hc.cv, g0.H);
+  const {W,H,panelW,l,hPx,floorY,drop,pay,pxPerM,cxS,cxH} = g0;
+  const R = hc.res; if(!R) return;
+  ctx.clearRect(0,0,W,H);
+  // timeline
+  let fall = 0, tSim = -1, final = false;
+  if(hc.playT === null){ fall = 0; tSim = -1; final = true; }
+  else {
+    const tau = hc.playT;
+    if(tau < T_FALL){ fall = 1 - (tau/T_FALL)*(tau/T_FALL); tSim = -1; }
+    else { fall = 0; tSim = (tau - T_FALL)/R.slow; }
+  }
+  // initial resting display = final state (page complete at rest)
+  let sh, gh, ss, gs;
+  if(hc.playT === null){ sh = R.rh.sFinal; ss = R.rs.sFinal; gh = R.rh.peak; gs = R.rs.peak; }
+  else if(tSim < 0){ sh = 0; ss = 0; gh = 0; gs = 0; }
+  else { const a = sample(R.rh, tSim), b = sample(R.rs, tSim); sh = a.s; gh = Math.max(0,a.g); ss = b.s; gs = Math.max(0,b.g);
+         if(a.done){ gh = R.rh.peak; } if(b.done){ gs = R.rs.peak; } }
+  // floor
+  ctx.fillStyle = TK.s2; ctx.fillRect(0, floorY, W, H-floorY);
+  ctx.strokeStyle = TK.line; ctx.beginPath(); ctx.moveTo(0,floorY+.5); ctx.lineTo(W,floorY+.5); ctx.stroke();
+  const payW = panelW + 14;
+  const payFill = (g, lim) => g > lim ? TK.bad : TK.ink;
+  function payload(cx, bottomY, label, g){
+    ctx.fillStyle = payFill(g, HC.glim); ctx.globalAlpha = .92;
+    ctx.fillRect(cx-payW/2, bottomY-pay, payW, pay); ctx.globalAlpha = 1;
+    ctx.fillStyle = TK.bg; ctx.font = `500 ${12}px ${MONO}`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label, cx, bottomY-pay/2);
+  }
+  // ----- solid slab column
+  const hsPx = R.Ms.h*pxPerM, sPx = ss*pxPerM;
+  const topS = floorY - Math.max(hsPx - sPx, 0.5);
+  ctx.fillStyle = TK.steel; ctx.fillRect(cxS-panelW/2, topS, panelW, floorY-topS);
+  payload(cxS, topS - fall*drop, hc.m+' kg', (hc.playT===null? R.rs.peak : gs));
+  // ----- honeycomb column
+  const eps = clamp(sh/HC.H, 0, 0.999), epsD = R.Mh.epsD;
+  const rows = HC.rows, sc = [];
+  for(let k=0;k<rows;k++){
+    if(eps <= epsD){ const f = clamp(eps/epsD*rows - k, 0, 1); sc.push(1 - epsD*f); }
+    else sc.push(1 - eps);
+  }
+  // exact stacked height of the rows, used to renormalise to the target crush
+  function heightOf(scs){ let c = l*scs[0]; for(let k=1;k<rows;k++){ c = c + 0.5*l*scs[k-1] + l*scs[k]; } return c + l*scs[rows-1]; }
+  const target = hPx*(1-eps), kap = target/heightOf(sc);
+  const scn = sc.map(v=>v*kap);
+  const x0 = cxH - panelW/2, topH = floorY - target;
+  ctx.save(); ctx.beginPath(); ctx.rect(x0, topH-1, panelW, target+1); ctx.clip();
+  const dx = Math.sqrt(3)*l;
+  const lw = 0.8 + l*hc.tl*2.4;
+  const showHeat = $('#chk-heat').checked;
+  const live = hc.playT !== null && tSim >= 0 && tSim < R.rh.tEnd;
+  const loadFrac = live ? clamp(gh/HC.glim, 0, 1) : 0;
+  const rowHeat = [];
+  for(let k=0;k<rows;k++){
+    let hh;
+    if(eps > epsD) hh = live ? 1 : 0.6;
+    else {
+      const f = clamp(eps/epsD*rows - k, 0, 1);
+      if(f >= 1) hh = live ? 0.3 : 0.2;
+      else if(f > 0) hh = live ? 0.6 + 0.4*Math.sin(Math.PI*f) : 0.2;
+      else hh = live ? 0.08 + 0.22*loadFrac : 0.03;
+    }
+    rowHeat.push(hh);
+  }
+  let c = topH + l*scn[0];
+  for(let k=0;k<rows;k++){
+    if(k>0) c = c + 0.5*l*scn[k-1] + l*scn[k];
+    const s = scn[k], hk = rowHeat[k];
+    for(let i=-1;i<=7;i++){
+      const x = x0 + (i+0.5)*dx + (k&1 ? dx/2 : 0);
+      ctx.beginPath();
+      ctx.moveTo(x, c-l*s); ctx.lineTo(x+dx/2, c-0.5*l*s); ctx.lineTo(x+dx/2, c+0.5*l*s);
+      ctx.lineTo(x, c+l*s); ctx.lineTo(x-dx/2, c+0.5*l*s); ctx.lineTo(x-dx/2, c-0.5*l*s); ctx.closePath();
+      ctx.globalAlpha = .45; ctx.fillStyle = TK.wash; ctx.fill();
+      if(showHeat && hk > .15){ ctx.globalAlpha = .5*hk; ctx.fillStyle = heatCol(hk); ctx.fill(); }
+      ctx.globalAlpha = 1;
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = lw;
+      if(!showHeat){ ctx.strokeStyle = TK.honey; ctx.stroke(); }
+      else {
+        const vx = [x,x+dx/2,x+dx/2,x,x-dx/2,x-dx/2], vy = [c-l*s,c-.5*l*s,c+.5*l*s,c+l*s,c+.5*l*s,c-.5*l*s];
+        for(let q=0;q<6;q++){ const q2 = (q+1)%6; ctx.strokeStyle = heatCol((q===1||q===4) ? hk*.6 : hk); ctx.beginPath(); ctx.moveTo(vx[q],vy[q]); ctx.lineTo(vx[q2],vy[q2]); ctx.stroke(); }
+        if(hk > .45){ ctx.fillStyle = heatCol(hk); for(let q=0;q<6;q++){ ctx.beginPath(); ctx.arc(vx[q],vy[q],lw*.8,0,7); ctx.fill(); } }
+      }
+    }
+  }
+  ctx.restore();
+  payload(cxH, topH - fall*drop, hc.m+' kg', (hc.playT===null? R.rh.peak : gh));
+  // labels
+  ctx.textBaseline='alphabetic'; ctx.textAlign='center';
+  ctx.font = `600 13px ${SANS}`; ctx.fillStyle = TK.ink;
+  ctx.fillText('Solid slab, same mass', cxS, floorY+22); ctx.fillText('Honeycomb core', cxH, floorY+22);
+  ctx.font = `500 11px ${MONO}`; ctx.fillStyle = TK.muted;
+  ctx.fillText(`${(R.Ms.h*1000).toFixed(1)} mm thick`, cxS, floorY+40);
+  ctx.fillText('150 mm deep', cxH, floorY+40);
+  // live g readouts above payloads
+  const gTxt = (g) => (g>=1000? Math.round(g).toLocaleString('en-US') : g>=100? Math.round(g) : g.toFixed(0)) + ' g';
+  ctx.font = `500 14px ${MONO}`;
+  const showG = (cx, bottomY, g, over) => { ctx.fillStyle = over ? TK.bad : TK.ink; ctx.fillText(gTxt(g), cx, bottomY - pay - 10); };
+  showG(cxS, topS - fall*drop, gs, gs > HC.glim);
+  showG(cxH, topH - fall*drop, gh, gh > HC.glim);
+  // drop height tag
+  ctx.font = `500 11px ${MONO}`; ctx.fillStyle = TK.muted; ctx.textAlign='left';
+  ctx.fillText(`${hc.h.toFixed(1)} m drop`, 12, 20);
+  ctx.fillText(`${hc.m} kg`, 12, 36);
+  drawHCChart(tSim);
+}
+function drawHCChart(tSim){
+  const R = hc.res; if(!R) return;
+  const {ctx,w,h} = fit(hc.ch, 210);
+  ctx.clearRect(0,0,w,h);
+  const L=58, Rr=14, Tp=22, B=28, pw=w-L-Rr, ph=h-Tp-B;
+  const tMax = Math.max(R.rh.tEnd, R.rs.tEnd)*1.04;
+  const gMax = Math.max(R.rh.peak, R.rs.peak, HC.glim*1.2);
+  const yHi = Math.max(3, Math.ceil(Math.log10(gMax)));
+  const X = t => L + t/tMax*pw;
+  const Y = g => Tp + ph*(1 - Math.log10(Math.max(g,1))/yHi);
+  ctx.font = `400 10.5px ${MONO}`; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(let e=0;e<=yHi;e++){
+    const y = Y(Math.pow(10,e)); ctx.strokeStyle = TK.line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(L,y+.5); ctx.lineTo(L+pw,y+.5); ctx.stroke();
+    const v = Math.pow(10,e); ctx.fillStyle = TK.muted; ctx.fillText((v>=1000 ? (v/1000)+'k' : v)+' g', L-8, y);
+  }
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const ticks = 4;
+  for(let i=0;i<=ticks;i++){ const t = tMax*i/ticks; ctx.fillStyle = TK.muted; ctx.fillText((t*1000).toFixed(t*1000<10?1:0)+(i===ticks?' ms':''), clamp(X(t),L+8,w-22), Tp+ph+8); }
+  // limit
+  ctx.setLineDash([5,4]); ctx.strokeStyle = TK.bad; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(L,Y(HC.glim)); ctx.lineTo(L+pw,Y(HC.glim)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = TK.bad; ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.font = `500 10.5px ${MONO}`; ctx.fillText('payload limit 50 g', L+10, Y(HC.glim)-3);
+  function line(Rr_, col, lw){
+    ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin='round'; ctx.beginPath();
+    for(let i=0;i<Rr_.T.length;i++){ const x = X(Rr_.T[i]), y = Y(Rr_.G[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.stroke();
+  }
+  line(R.rs, TK.steel, 2); line(R.rh, TK.honey, 2.6);
+  if(tSim !== null && tSim >= 0){ const x = X(clamp(tSim,0,tMax)); ctx.strokeStyle = TK.ink; ctx.globalAlpha=.5; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x+.5,Tp); ctx.lineTo(x+.5,Tp+ph); ctx.stroke(); ctx.globalAlpha=1; }
+  // legend
+  ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.font = `500 11px ${SANS}`;
+  ctx.fillStyle = TK.honey; ctx.fillRect(L, 6, 14, 4); ctx.fillStyle = TK.ink; ctx.fillText('Honeycomb', L+20, 8);
+  ctx.fillStyle = TK.steel; ctx.fillRect(L+104, 6, 14, 4); ctx.fillStyle = TK.ink; ctx.fillText('Solid slab', L+124, 8);
+}
+function hcPlay(){
+  cancelAnimationFrame(hc.raf);
+  if(REDUCED){ hc.playT = null; drawHC(); return; }
+  hc.playT = 0; let last = performance.now();
+  const total = T_FALL + T_IMPACT + T_REST;
+  const loop = now => {
+    hc.playT += Math.min(0.05, (now-last)/1000); last = now;
+    if(hc.playT >= total){ hc.playT = null; drawHC(); return; }
+    drawHC(); hc.raf = requestAnimationFrame(loop);
+  };
+  hc.raf = requestAnimationFrame(loop);
+}
+function hcUpdate(play){ hcCompute(); if(play) hcPlay(); else { cancelAnimationFrame(hc.raf); hc.playT = null; drawHC(); } }
+function hcAuto(){
+  let best = null;
+  for(let tl=0.01; tl<=0.15001; tl+=0.0025){
+    const M = hcModel(tl), r = crush(M, hc.m, Math.sqrt(2*HC.G*hc.h));
+    if(!r.hard && r.smax/M.sD <= 0.85 && r.peak <= HC.glim){ best = tl; break; }
+  }
+  if(best === null){ best = 0.15; }
+  hc.tl = Math.round(best*200)/200; $('#in-tl').value = (hc.tl*100).toFixed(1); syncRanges(); hcUpdate(true);
+}
+$('#in-tl').addEventListener('input', e => { hc.tl = +e.target.value/100; hcCompute(); drawHC(); });
+$('#in-tl').addEventListener('change', () => hcUpdate(true));
+$('#in-h').addEventListener('input', e => { hc.h = +e.target.value; hcCompute(); drawHC(); });
+$('#in-h').addEventListener('change', () => hcUpdate(true));
+$('#in-m').addEventListener('input', e => { hc.m = +e.target.value; hcCompute(); drawHC(); });
+$('#in-m').addEventListener('change', () => hcUpdate(true));
+$('#b-drop').addEventListener('click', () => hcUpdate(true));
+$('#b-auto').addEventListener('click', hcAuto);
+$('#chk-heat').addEventListener('change', drawHC);
+
+/* ---------- stress colour ramp: honey (low) to red to deep (high) ---------- */
+function rgbMix(a,b,t){ const A = typeof a==='string' ? rgb(a) : a, B = typeof b==='string' ? rgb(b) : b; return A.map((v,i)=>lerp(v,B[i],t)); }
+function heatCol(h){
+  h = clamp(h,0,1);
+  const c = h < .6 ? rgbMix(TK.honey, TK.bad, h/.6) : rgbMix(TK.bad, rgbMix(TK.bad, TK.ink, .55), (h-.6)/.4);
+  return `rgb(${c.map(Math.round).join(',')})`;
+}
+
+/* ---------- shape comparison ---------- */
+const S3 = Math.sqrt(3), shCv = $('#sh-cv'), SH = {load:false};
+const SHN = {tri:'Triangle', sq:'Square', hex:'Hexagon', circ:'Circle'}, SHO = ['tri','sq','hex','circ'];
+// wall length per cell when every cell has the same footprint area (shared walls count half)
+function shWall(){ return {tri:1.5*Math.sqrt(4/S3), sq:2, hex:3*Math.sqrt(2/(3*S3)), circ:2*Math.PI*Math.sqrt(1/(2*S3))}; }
+function shUpdate(){
+  const w = shWall(), M = hc.res.Mh.mass;
+  $('#sh-body').innerHTML = SHO.map(k => { const r = w[k]/w.hex, best = k==='hex';
+    return `<tr class="${best?'best':''}"><td>${SHN[k]}</td><td>${r.toFixed(2)}×</td><td>${(M*r).toFixed(1)} kg</td><td class="${best?'ok':'bad'}">${best?'least':'+'+Math.round((r-1)*100)+'%'}</td></tr>`; }).join('');
+  const sv = k => Math.round((1-w.hex/w[k])*100);
+  $('#sh-why').textContent = `For the same cell size and wall thickness, a hexagonal core uses ${sv('sq')}% less aluminium than square cells, ${sv('tri')}% less than triangles and ${sv('circ')}% less than round tubes.`;
+}
+function drawSH(){
+  const W = shCv.clientWidth, cols = W>=600 ? 4 : 2, gap = 12, p = (W-gap*(cols+1))/cols, lab = 50;
+  const H = Math.round(gap + (4/cols)*(p+lab+gap)), {ctx} = fit(shCv, H);
+  ctx.clearRect(0,0,W,H);
+  const w = shWall(), lh = p/4.6, sc = lh*Math.sqrt(1.5*S3), ld = SH.load;
+  SHO.forEach((k,i) => {
+    const ox = gap + (i%cols)*(p+gap), oy = gap + Math.floor(i/cols)*(p+lab+gap);
+    ctx.save(); ctx.beginPath(); ctx.rect(ox,oy,p,p); ctx.clip(); ctx.fillStyle = TK.surface; ctx.fillRect(ox,oy,p,p);
+    ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+    const E = (x1,y1,x2,y2,h) => { ctx.strokeStyle = ld ? heatCol(h) : TK.honey; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); };
+    const dot = (x,y,h) => { if(ld){ ctx.fillStyle = heatCol(h); ctx.beginPath(); ctx.arc(x,y,3.4,0,7); ctx.fill(); } };
+    if(k==='sq'){ for(let a=0;a*sc<=p+sc;a++){ E(ox+a*sc,oy,ox+a*sc,oy+p,.6); E(ox,oy+a*sc,ox+p,oy+a*sc,.05); } }
+    else if(k==='tri'){ const a = Math.sqrt(4/S3)*sc, h = a*S3/2;
+      for(let r=0;r*h<=p+h;r++) for(let j=-1;j*a<=p+a;j++){ const x = ox+j*a+(r&1?a/2:0), y = oy+r*h;
+        E(x,y,x+a,y,.35); E(x,y,x+a/2,y+h,.65); E(x,y,x-a/2,y+h,.65); } }
+    else if(k==='hex'){ const l = lh, dx = S3*l;
+      for(let r=-1;r*1.5*l<=p+l;r++) for(let j=-1;j*dx<=p+dx;j++){ const x = ox+j*dx+(r&1?dx/2:0), y = oy+r*1.5*l;
+        const v = [[x,y-l],[x+dx/2,y-l/2],[x+dx/2,y+l/2],[x,y+l],[x-dx/2,y+l/2],[x-dx/2,y-l/2]];
+        for(let q=0;q<6;q++){ const A = v[q], B = v[(q+1)%6]; E(A[0],A[1],B[0],B[1], (q===1||q===4) ? .55 : .9); dot(A[0],A[1],.9); } } }
+    else { const d = Math.sqrt(2/S3)*sc, r = d/2; ctx.fillStyle = TK.bad; ctx.globalAlpha = .22; ctx.fillRect(ox,oy,p,p); ctx.globalAlpha = 1;
+      for(let rw=-1;rw*d*S3/2<=p+d;rw++) for(let j=-1;j*d<=p+d;j++){ const x = ox+j*d+(rw&1?d/2:0), y = oy+rw*d*S3/2;
+        ctx.fillStyle = TK.surface; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
+        ctx.strokeStyle = ld ? heatCol(.1) : TK.honey; ctx.stroke();
+        [0,1,2].forEach(n => { const t = n*Math.PI/3; dot(x+Math.cos(t)*r, y+Math.sin(t)*r, 1); }); } }
+    ctx.restore();
+    ctx.lineWidth = k==='hex' ? 3 : 1; ctx.strokeStyle = k==='hex' ? TK.honey : TK.line; ctx.strokeRect(ox,oy,p,p);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = TK.ink; ctx.font = `600 13px ${SANS}`; ctx.fillText(SHN[k], ox+p/2, oy+p+20);
+    ctx.font = `500 11px ${MONO}`; ctx.fillStyle = k==='hex' ? TK.ok : TK.muted;
+    ctx.fillText(k==='hex' ? '1.00× wall · least' : (w[k]/w.hex).toFixed(2)+'× wall'+(k==='circ' ? ' · gaps' : ''), ox+p/2, oy+p+38);
+  });
+}
+$('#chk-load').addEventListener('change', e => { SH.load = e.target.checked; drawSH(); });
+
+/* =====================================================
+   PART TWO: SPIDER WEB (position-based, tension-only threads)
+   ===================================================== */
+const WB = {G:9.81, MN:0.008, EAr:45, EAs:22, EB:0.28, rb:0.2, SUB:16, ITER:3, cn:6, cb:2};
+
+function newWeb(cfg){
+  const {nR, nS, spiral, pre} = cfg;
+  const N = 1 + nR*nS;
+  const X = new Float64Array(N*3), V = new Float64Array(N*3), P = new Float64Array(N*3), X0 = new Float64Array(N*3), Wm = new Float64Array(N);
+  const rr = i => nS>1 ? 0.10 + 0.90*(i-1)/(nS-1) : 1;
+  const idx = (i,j) => 1 + (i-1)*nR + (((j%nR)+nR)%nR);
+  const MN = WB.MN;
+  Wm[0] = 1/MN;
+  for(let i=1;i<=nS;i++) for(let j=0;j<nR;j++){
+    const a = 2*Math.PI*j/nR, k = idx(i,j)*3;
+    X[k] = Math.cos(a)*rr(i); X[k+1] = Math.sin(a)*rr(i); X[k+2] = 0;
+    Wm[idx(i,j)] = i===nS ? 0 : 1/MN;
+  }
+  X0.set(X);
+  const A=[],B=[],L0=[],Len=[],K=[],tol=[],kind=[],alive=[];
+  let seed = 7919;
+  const rnd = () => { seed = (seed*1103515245 + 12345) & 0x7fffffff; return seed/0x7fffffff; };
+  const add = (a,b,kd) => {
+    const dx=X[a*3]-X[b*3], dy=X[a*3+1]-X[b*3+1], len=Math.hypot(dx,dy);
+    A.push(a); B.push(b); Len.push(len); L0.push(kd===0 ? len*(1-pre) : len);
+    K.push(kd===1 ? WB.EAs : WB.EAr); tol.push(1 + 0.12*(rnd()-0.5)); kind.push(kd); alive.push(true);
+  };
+  for(let j=0;j<nR;j++){ add(0, idx(1,j), 0); for(let i=1;i<nS;i++) add(idx(i,j), idx(i+1,j), 0); }
+  if(spiral) for(let i=1;i<nS;i++) for(let j=0;j<nR;j++) add(idx(i,j), idx(i,j+1), 1);
+  for(let j=0;j<nR;j++) add(idx(nS,j), idx(nS,j+1), 2);
+  let silk = 0, count = 0;
+  for(let c=0;c<A.length;c++) if(kind[c]!==2){ silk += Len[c]; count++; }
+  return {cfg, N, X, V, P, X0, W:Wm, A, B, L0, Len, K, tol, kind, alive, strain:new Float64Array(A.length), silk, count, broken:0, cuts:0, peakEps:0, maxSag:0};
+}
+function relaxWeb(web){
+  web.X.set(web.X0); web.V.fill(0); web.peakEps = 0; web.maxSag = 0; web.strain.fill(0);
+}
+function newBall(bc){ return {x:bc.off, y:0, z:bc.h, vx:0, vy:0, vz:0, M:bc.M, state:'fall', calm:0, t:0, touched:false, done:false, outcome:null}; }
+
+function stepSub(web, ball, h){
+  const {X,V,P,W,A,B,L0,K,kind,alive,tol,N} = web;
+  const G = WB.G;
+  for(let i=0;i<N;i++){
+    const k=i*3;
+    if(W[i]===0){ P[k]=X[k]; P[k+1]=X[k+1]; P[k+2]=X[k+2]; continue; }
+    V[k+2] -= G*h;
+    P[k]=X[k]+V[k]*h; P[k+1]=X[k+1]+V[k+1]*h; P[k+2]=X[k+2]+V[k+2]*h;
+  }
+  ball.vz -= G*h;
+  let bx = ball.x + ball.vx*h, by = ball.y + ball.vy*h, bz = ball.z + ball.vz*h;
+  const wb = 1/ball.M, rb = WB.rb, nC = A.length;
+  for(let it=0; it<WB.ITER; it++){
+    for(let c=0;c<nC;c++){
+      if(!alive[c] || kind[c]===2) continue;
+      const a=A[c]*3, b=B[c]*3;
+      const dx=P[b]-P[a], dy=P[b+1]-P[a+1], dz=P[b+2]-P[a+2];
+      const len=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      const C = len - L0[c];
+      if(C <= 0) continue;
+      const ws = W[A[c]] + W[B[c]]; if(ws === 0) continue;
+      const al = (L0[c]/K[c])/(h*h);
+      const dl = -C/(ws + al), nx=dx/len, ny=dy/len, nz=dz/len;
+      const wa=W[A[c]], wbb=W[B[c]];
+      P[a]  -= wa*dl*nx;  P[a+1]  -= wa*dl*ny;  P[a+2]  -= wa*dl*nz;
+      P[b]  += wbb*dl*nx; P[b+1]  += wbb*dl*ny; P[b+2]  += wbb*dl*nz;
+    }
+    // ball vs threads
+    if(bz - rb < 0.35){
+      for(let c=0;c<nC;c++){
+        if(!alive[c]) continue;
+        const a=A[c]*3, b=B[c]*3;
+        const az=P[a+2], cz=P[b+2];
+        if((az>bz+rb && cz>bz+rb) || (az<bz-rb && cz<bz-rb)) continue;
+        const ex=P[b]-P[a], ey=P[b+1]-P[a+1], ez=cz-az;
+        const l2 = ex*ex+ey*ey+ez*ez; if(l2 < 1e-12) continue;
+        let t = ((bx-P[a])*ex + (by-P[a+1])*ey + (bz-az)*ez)/l2; t = t<0?0:t>1?1:t;
+        const px=P[a]+ex*t, py=P[a+1]+ey*t, pz=az+ez*t;
+        let nx=bx-px, ny=by-py, nz=bz-pz; const d=Math.sqrt(nx*nx+ny*ny+nz*nz);
+        if(d >= rb) continue;
+        if(d < 1e-9){ nx=0; ny=0; nz=1; } else { nx/=d; ny/=d; nz/=d; }
+        const pen = rb - d, wa=W[A[c]], wc=W[B[c]];
+        const wcont = (1-t)*(1-t)*wa + t*t*wc;
+        const den = wb + wcont; if(den === 0) continue;
+        const dl = pen/den;
+        bx += nx*dl*wb; by += ny*dl*wb; bz += nz*dl*wb;
+        P[a]-=nx*dl*(1-t)*wa; P[a+1]-=ny*dl*(1-t)*wa; P[a+2]-=nz*dl*(1-t)*wa;
+        P[b]-=nx*dl*t*wc;     P[b+1]-=ny*dl*t*wc;     P[b+2]-=nz*dl*t*wc;
+        ball.touched = true;
+      }
+    }
+  }
+  const dn = 1/(1+WB.cn*h);
+  for(let i=0;i<N;i++){
+    const k=i*3; if(W[i]===0) continue;
+    V[k]=(P[k]-X[k])/h*dn; V[k+1]=(P[k+1]-X[k+1])/h*dn; V[k+2]=(P[k+2]-X[k+2])/h*dn;
+    X[k]=P[k]; X[k+1]=P[k+1]; X[k+2]=P[k+2];
+  }
+  const db = ball.touched ? 1/(1+WB.cb*h) : 1;
+  ball.vx=(bx-ball.x)/h*db; ball.vy=(by-ball.y)/h*db; ball.vz=(bz-ball.z)/h*db; ball.x=bx; ball.y=by; ball.z=bz;
+  // strain and breakage
+  for(let c=0;c<nC;c++){
+    if(!alive[c] || kind[c]===2) continue;
+    const a=A[c]*3, b=B[c]*3;
+    const len = Math.hypot(X[b]-X[a], X[b+1]-X[a+1], X[b+2]-X[a+2]);
+    const e = (len - L0[c])/L0[c];
+    web.strain[c] = e;
+    if(e > web.peakEps) web.peakEps = e;
+    if(e > WB.EB*tol[c]){ alive[c] = false; web.broken++; }
+  }
+}
+function stepFrame(web, ball, dt){
+  const h = dt/WB.SUB;
+  for(let s=0;s<WB.SUB;s++) stepSub(web, ball, h);
+  ball.t += dt;
+  let minz = 0; for(let i=0;i<web.N;i++){ const z = web.X[i*3+2]; if(z<minz) minz=z; }
+  if(-minz > web.maxSag) web.maxSag = -minz;
+  if(ball.state==='fall' && ball.touched) ball.state = 'caught?';
+  if(ball.z < -2.2){ ball.state='fell'; ball.done = true; ball.outcome='fell'; return; }
+  if(ball.touched){
+    const sp = Math.hypot(ball.vx, ball.vy, ball.vz);
+    ball.calm = sp < 0.12 ? ball.calm + dt : 0;
+    if(ball.calm > 0.7){ ball.done = true; ball.outcome = 'caught'; ball.state = 'caught'; }
+  }
+  if(ball.t > 10){ ball.done = true; ball.outcome = ball.z > -2.2 ? 'caught' : 'fell'; }
+}
+function summarize(web, ball){
+  const ratio = web.peakEps/WB.EB;
+  return {outcome: ball.outcome, sag: web.maxSag, peak: web.peakEps, ratio, broken: web.broken, cuts: web.cuts, silk: web.silk, count: web.count};
+}
+function runWeb(cfg, bc){
+  const web = newWeb(cfg), ball = newBall(bc);
+  for(let n=0; n<720 && !ball.done; n++) stepFrame(web, ball, 1/60);
+  if(!ball.done){ ball.outcome = 'caught'; }
+  return summarize(web, ball);
+}
+function webVerdict(s){
+  const v = webVerdict0(s);
+  if(s.cuts > 0) v.why = `${s.cuts} thread${s.cuts===1?'':'s'} cut by you. ` + v.why;
+  return v;
+}
+function webVerdict0(s){
+  if(s.outcome === 'fell') return {tone:'bad', chip:'Under-built', why:`The ball tore through. ${s.broken} thread${s.broken===1?'':'s'} broke and the rest could not hold it.`};
+  if(s.broken > 0) return {tone:'warn', chip:'Thin margin', why:`The ball was caught, but ${s.broken} thread${s.broken===1?'':'s'} snapped on the way. The web is close to its limit.`};
+  if(s.ratio > 0.85) return {tone:'warn', chip:'Thin margin', why:`Caught, but the busiest thread reached ${Math.round(s.ratio*100)}% of its breaking strain.`};
+  if(s.ratio < 0.4) return {tone:'warn', chip:'Over-built', why:`Caught easily. The busiest thread only reached ${Math.round(s.ratio*100)}% of its breaking strain, so there is silk to spare.`};
+  return {tone:'ok', chip:'Efficient', why:`Caught. The busiest thread reached ${Math.round(s.ratio*100)}% of its breaking strain, with no silk wasted.`};
+}
+
+const wb = {cfg:{nR:16, nS:8, spiral:true, pre:0.02}, bc:{M:2, h:1, off:0}, web:null, ball:null, raf:0, running:false,
+            cv:$('#w-cv'), g:null, hover:-1, E:Math.PI/180*55, searching:false};
+wb.sinE = Math.sin(wb.E); wb.cosE = Math.cos(wb.E);
+
+function wLayout(){
+  const W = wb.cv.clientWidth;
+  const H = Math.round(clamp(W*0.72, 320, 580));
+  const S = Math.min(W*0.42, (H-28)/2.45);
+  wb.g = {W, H, S, cx: W/2, cy: 14 + 1.06*S};
+  return wb.g;
+}
+function proj(x,y,z){ const g=wb.g; return [g.cx + g.S*x, g.cy - g.S*(y*wb.sinE + z*wb.cosE)]; }
+
+function wSetStatus(t){ $('#w-status').textContent = t; }
+function wMetrics(final){
+  const web = wb.web;
+  $('#m-sag').textContent = Math.round(web.maxSag*100) + '% of R';
+  $('#m-peak').textContent = (web.peakEps*100).toFixed(1) + '%';
+  $('#m-broken').textContent = (web.broken + web.cuts) + ' of ' + web.count;
+  $('#m-silk').textContent = (web.silk).toFixed(0) + ' × R';
+  if(final){
+    const v = webVerdict(summarize(web, wb.ball)), el = $('#w-verdict');
+    el.dataset.tone = v.tone; $('#w-chip').textContent = v.chip; $('#w-why').textContent = v.why;
+  }
+}
+function wReadControls(){
+  wb.cfg.nR = +$('#in-nr').value; wb.cfg.nS = +$('#in-ns').value; wb.cfg.spiral = $('#chk-spiral').checked; wb.cfg.pre = +$('#in-pre').value/100;
+  wb.bc.M = +$('#in-bm').value; wb.bc.h = +$('#in-bh').value; wb.bc.off = +$('#in-bo').value/100;
+  $('#o-nr').textContent = wb.cfg.nR; $('#o-ns').textContent = wb.cfg.nS; $('#o-pre').textContent = (wb.cfg.pre*100).toFixed(1).replace('.0','') + ' %';
+  $('#o-bm').textContent = String(+wb.bc.M.toFixed(2)); $('#o-bh').textContent = wb.bc.h.toFixed(1)+' R';
+  $('#o-bo').textContent = wb.bc.off===0 ? 'centre' : Math.round(wb.bc.off*100)+'% of R from centre';
+}
+function wBuild(){ wb.web = newWeb(wb.cfg); wb.ball = newBall(wb.bc); }
+function wDrop(){
+  cancelAnimationFrame(wb.raf);
+  relaxWeb(wb.web); wb.ball = newBall(wb.bc);
+  wSetStatus('Falling. Click any thread to cut it.');
+  { const el = $('#w-verdict'); el.dataset.tone = 'neutral'; $('#w-chip').textContent = 'Testing'; $('#w-why').textContent = 'Ball in flight. Results appear when it settles or falls.'; }
+  if(REDUCED){ for(let n=0;n<720 && !wb.ball.done;n++) stepFrame(wb.web, wb.ball, 1/60); wMetrics(true); wDraw(); wSetStatus('Done. Click any thread to cut it, then drop again.'); return; }
+  wb.running = true; let last = performance.now(), acc = 0;
+  const loop = now => {
+    acc += Math.min(0.05, (now-last)/1000); last = now;
+    while(acc >= 1/60 && !wb.ball.done){ stepFrame(wb.web, wb.ball, 1/60); acc -= 1/60; }
+    wMetrics(false); wDraw();
+    if(wb.ball.touched && !wb.ball.done) wSetStatus('Settling. Click any thread to cut it.');
+    if(wb.ball.done){ wb.running = false; wMetrics(true); wSetStatus(wb.ball.outcome==='fell' ? 'The ball fell through. Mend the web or add threads.' : 'Caught. Click a thread to cut it, then drop again.'); return; }
+    wb.raf = requestAnimationFrame(loop);
+  };
+  wb.raf = requestAnimationFrame(loop);
+}
+function wRebuildAndDrop(){ wReadControls(); wBuild(); wDrop(); }
+function wBallOnly(){ wRebuildAndDrop(); }
+
+function wDraw(){
+  const g0 = wLayout();
+  const {ctx} = fit(wb.cv, g0.H);
+  const {W,H,S,cx,cy} = g0, web = wb.web, ball = wb.ball; if(!web) return;
+  ctx.clearRect(0,0,W,H);
+  // landing target on the web plane
+  if(!ball.touched && ball.z > 0.3){
+    ctx.strokeStyle = TK.muted; ctx.globalAlpha = .7; ctx.lineWidth = 1.2; ctx.setLineDash([3,4]);
+    ctx.beginPath(); for(let k=0;k<=48;k++){ const a=k/48*Math.PI*2; const p=proj(wb.bc.off + Math.cos(a)*WB.rb, Math.sin(a)*WB.rb, 0); k?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]); }
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
+  // gather segments
+  const items = [];
+  const X = web.X;
+  for(let c=0;c<web.A.length;c++){
+    if(!web.alive[c]) continue;
+    const a=web.A[c]*3, b=web.B[c]*3;
+    const p0 = proj(X[a],X[a+1],X[a+2]), p1 = proj(X[b],X[b+1],X[b+2]);
+    items.push({c, p0, p1, d:(X[a+1]+X[b+1])/2});
+  }
+  items.sort((u,v)=>v.d-u.d);
+  const bp = proj(ball.x, ball.y, ball.z);
+  let ballDrawn = false;
+  const drawBall = () => {
+    const r = S*WB.rb;
+    const gr = ctx.createRadialGradient(bp[0]-r*.35, bp[1]-r*.35, r*.1, bp[0], bp[1], r);
+    gr.addColorStop(0, TK.bh); gr.addColorStop(1, TK.bl);
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(bp[0], bp[1], r, 0, Math.PI*2); ctx.fill();
+    ballDrawn = true;
+  };
+  const rad = 1.7, spi = 1.05;
+  for(const it of items){
+    if(!ballDrawn && it.d < ball.y) drawBall();
+    const k = web.kind[it.c];
+    let col, alpha = 1;
+    if(k === 2){ col = TK.muted; alpha = .8; }
+    else {
+      const e = web.strain[it.c], q = clamp(e/WB.EB, 0, 1);
+      if(e <= 0.0005 && !(k===0 && web.cfg.pre>0)) { col = TK.thread; alpha = .5; }
+      else col = q < .5 ? mix(TK.thread, TK.honey, q*2) : mix(TK.honey, TK.bad, (q-.5)*2);
+    }
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = (it.c === wb.hover) ? TK.bad : col;
+    ctx.lineWidth = (it.c === wb.hover) ? 3.2 : (k===2 ? 2.4 : k===0 ? rad : spi);
+    ctx.beginPath(); ctx.moveTo(it.p0[0], it.p0[1]); ctx.lineTo(it.p1[0], it.p1[1]); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  if(!ballDrawn) drawBall();
+  // drop-height marker
+  if(ball.state==='fall' && !ball.touched && ball.t===0){ ctx.font=`500 11px ${MONO}`; ctx.fillStyle=TK.muted; ctx.textAlign='left'; ctx.fillText('ball '+(+wb.bc.M.toFixed(2))+' · drop '+wb.bc.h.toFixed(1)+' R', 12, 20); }
+}
+function pickThread(mx,my){
+  const web = wb.web; let best=-1, bd=11;
+  for(let c=0;c<web.A.length;c++){
+    if(!web.alive[c] || web.kind[c]===2) continue;
+    const a=web.A[c]*3, b=web.B[c]*3;
+    const p0 = proj(web.X[a],web.X[a+1],web.X[a+2]), p1 = proj(web.X[b],web.X[b+1],web.X[b+2]);
+    const ex=p1[0]-p0[0], ey=p1[1]-p0[1], l2=ex*ex+ey*ey; if(l2<1e-6) continue;
+    let t=((mx-p0[0])*ex+(my-p0[1])*ey)/l2; t=clamp(t,0,1);
+    const d=Math.hypot(mx-(p0[0]+ex*t), my-(p0[1]+ey*t));
+    if(d<bd){ bd=d; best=c; }
+  }
+  return best;
+}
+wb.cv.addEventListener('pointermove', e => {
+  if(!wb.web) return;
+  const r = wb.cv.getBoundingClientRect(); const c = pickThread(e.clientX-r.left, e.clientY-r.top);
+  if(c !== wb.hover){ wb.hover = c; wb.cv.style.cursor = c>=0 ? 'crosshair' : 'default'; if(!wb.running) wDraw(); }
+});
+wb.cv.addEventListener('pointerleave', () => { wb.hover = -1; if(!wb.running) wDraw(); });
+wb.cv.addEventListener('pointerdown', e => {
+  if(!wb.web) return;
+  const r = wb.cv.getBoundingClientRect(); const c = pickThread(e.clientX-r.left, e.clientY-r.top);
+  if(c >= 0){ wb.web.alive[c] = false; wb.web.cuts++; wb.hover = -1; wSetStatus('Thread cut. Drop the ball to test the damaged web.'); wMetrics(wb.ball.done); if(!wb.running) wDraw(); }
+});
+['in-nr','in-ns','in-pre'].forEach(id => { $('#'+id).addEventListener('input', wReadControls); $('#'+id).addEventListener('change', wRebuildAndDrop); });
+$('#chk-spiral').addEventListener('change', wRebuildAndDrop);
+['in-bm','in-bh','in-bo'].forEach(id => { $('#'+id).addEventListener('input', wReadControls); $('#'+id).addEventListener('change', wBallOnly); });
+$('#b-wdrop').addEventListener('click', () => { wReadControls(); wDrop(); });
+$('#b-wreset').addEventListener('click', wRebuildAndDrop);
+$('#b-wauto').addEventListener('click', () => {
+  if(wb.searching) return; wb.searching = true; wReadControls();
+  const RS = [6,7,8,9,10,12,14,16,18,20,24], NS = [3,4,5,6,8,10];
+  let best = null, ni = 0, ri = 0;
+  const tick = () => {
+    const t0 = performance.now();
+    while(ni < NS.length && performance.now()-t0 < 40){
+      const cfg = {nR:RS[ri], nS:NS[ni], spiral:true, pre:wb.cfg.pre};
+      if(best && newWeb(cfg).silk >= best.s.silk){ ni++; ri = 0; continue; }
+      const s = runWeb(cfg, wb.bc);
+      if(s.outcome==='caught' && s.broken===0 && s.ratio<=0.8){ if(!best || s.silk < best.s.silk) best = {cfg, s}; ni++; ri = 0; }
+      else if(++ri >= RS.length){ ni++; ri = 0; }
+    }
+    wSetStatus(`Searching ${Math.min(ni,NS.length)} of ${NS.length} ring counts...`);
+    if(ni < NS.length){ setTimeout(tick, 0); return; }
+    wb.searching = false;
+    if(best){
+      $('#in-nr').value = best.cfg.nR; $('#in-ns').value = best.cfg.nS; $('#chk-spiral').checked = true; syncRanges();
+      wRebuildAndDrop(); wSetStatus(`Lightest web that holds: ${best.cfg.nR} radials, ${best.cfg.nS} rings.`);
+    } else wSetStatus('No web in the search range holds this ball. Try a lighter ball or a lower drop.');
+  };
+  tick();
+});
+
+/* =====================================================
+   INIT
+   ===================================================== */
+function syncRanges(){ document.querySelectorAll('input[type=range]').forEach(r => r.style.setProperty('--p', ((r.value-r.min)/(r.max-r.min)*100)+'%')); }
+document.querySelectorAll('input[type=range]').forEach(r => r.addEventListener('input', syncRanges));
+function redrawAll(){ readTokens(); if(!heroRAF || REDUCED) drawHero(heroT); drawHC(); drawSH(); if(wb.web) wDraw(); }
+readTokens(); syncRanges();
+hcCompute(); drawHC(); drawSH();
+wReadControls(); wBuild();
+// resting state: ball already caught in the web, results shown
+{ let n=0; while(n<720 && !wb.ball.done){ stepFrame(wb.web, wb.ball, 1/60); n++; } }
+wMetrics(true); wDraw(); wSetStatus('Click any thread to cut it, then drop the ball again.');
+if(REDUCED) drawHero(0); else heroRAF = requestAnimationFrame(heroLoop);
+let rz = 0;
+let lastW = 0;
+new ResizeObserver(() => { const w = document.body.clientWidth; if(w === lastW) return; lastW = w; cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { if(REDUCED) drawHero(0); drawHC(); drawSH(); if(wb.web) wDraw(); }); }).observe(document.body);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+window.__hive = {crush, hcModel, solidModel, runWeb, newWeb, stepFrame, newBall, WB, HC, hc, wb, hcCompute};
+})();
+</script>
+
+</body></html>
